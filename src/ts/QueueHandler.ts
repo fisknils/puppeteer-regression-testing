@@ -35,20 +35,16 @@ const where = (array: Array<any>, where: PartialQueued, limit: number = 0) => {
 export class QueueHandler extends EventEmitter {
   private queue: Queue = [];
 
-  constructor() {
-    super();
-  }
-
-  private notice(method: string, message: string, params: IArguments) {
+  private notice(method: string, message: string, params: IArguments): void {
     const notice: QueueHandlerNotice = { method, message, params };
     this.emit("notice", notice);
   }
 
-  private hasItem(item: any) {
-    return where(this.queue, { item }).length;
+  private hasItem(item: any): boolean {
+    return !!where(this.queue, { item }).length;
   }
 
-  private update(item: Queued, modified: PartialQueued) {
+  private update(item: Queued, modified: PartialQueued): void {
     const i = this.queue.indexOf(item);
     this.queue[i] = Object.assign({}, item, modified);
     this.notice("update", "Updated state of queued item", arguments);
@@ -69,7 +65,7 @@ export class QueueHandler extends EventEmitter {
     this.notice("QItem", "Item was added to queue", arguments);
   }
 
-  enqueue(item: any) {
+  enqueue(item: any): void {
     this.notice("enqueue", "Attempting to add item to queue", arguments);
     this.QItem(item);
   }
