@@ -167,7 +167,6 @@ export class Scraper extends EventEmitter {
     let screenshot: IncompleteScreenshot = {
       Base64: null,
       URL: null,
-      Selector: null,
       Width: null,
     };
 
@@ -220,13 +219,12 @@ export class Scraper extends EventEmitter {
 
     const { isSameDimensions, misMatchPercentage } = res;
     const Base64 = res.getImageDataUrl();
-    const { Selector, URL, Width } = Screenshots[0];
+    const { URL, Width } = Screenshots[0];
     const { pathname } = URL;
     const [countOne, countTwo] = [one.DOMCount, two.DOMCount];
     const DOMCountDiff = +countOne - +countTwo;
 
     const ScreenshotDiff: ScreenshotDiff = {
-      Selector,
       Width,
       Path: pathname,
       Base64,
@@ -252,7 +250,6 @@ export type InjectJS = {
 };
 
 type ScreenshotDiff = {
-  Selector: string;
   Width: number;
   Path: string;
   Base64: string | null;
@@ -266,7 +263,6 @@ type Screenshot = {
   Base64: string;
   URL: URL;
   URLString?: string;
-  Selector: string;
   Width: number;
   DOMCount: number;
 };
@@ -274,7 +270,6 @@ type Screenshot = {
 type IncompleteScreenshot = {
   Base64: string | null;
   URL: URL | null;
-  Selector: string | null;
   Width: number | null;
 };
 
