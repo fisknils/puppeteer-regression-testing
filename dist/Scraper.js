@@ -97,7 +97,7 @@ class Scraper extends events_1.EventEmitter {
         await this.init();
     }
     async statusUpdate(method, args) {
-        args = JSON.parse(stringify(args));
+        const _args = JSON.parse(stringify(Object.assign({}, args)));
         this.emit("status", { method, args });
     }
     async onError(method, ex) {
