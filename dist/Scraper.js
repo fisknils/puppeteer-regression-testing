@@ -149,13 +149,11 @@ class Scraper extends events_1.EventEmitter {
             const diff = await this.getScreenshotDiff([
                 Object.assign({}, screenshot, {
                     URL: urlOne,
-                    URLString: urlOne.toString(),
                     Base64: one,
                     DOMCount: countOne,
                 }),
                 Object.assign({}, screenshot, {
                     URL: urlTwo,
-                    URLString: urlOne.toString(),
                     Base64: two,
                     DOMCount: countTwo,
                 }),
@@ -177,7 +175,7 @@ class Scraper extends events_1.EventEmitter {
         const { isSameDimensions, misMatchPercentage } = res;
         const Base64 = res.getImageDataUrl();
         const { URL, Width } = Screenshots[0];
-        const { pathname } = URL;
+        const { pathname } = one.URL;
         const [countOne, countTwo] = [one.DOMCount, two.DOMCount];
         const DOMCountDiff = +countOne - +countTwo;
         const ScreenshotDiff = {
