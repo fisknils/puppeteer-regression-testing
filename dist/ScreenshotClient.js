@@ -44,6 +44,7 @@ class ScreenshotClient extends events_1.EventEmitter {
         await this.reset();
         this.emit("start-job");
         this.statusUpdate("startJob", arguments);
+        console.log(job);
         await this.compareURLs(job)
             .then(() => this.emit("did-job", { job }))
             .catch((e) => this.emit("error", { method: "startJob", data: e }));
@@ -181,3 +182,4 @@ class ScreenshotClient extends events_1.EventEmitter {
     }
 }
 exports.ScreenshotClient = ScreenshotClient;
+//# sourceMappingURL=ScreenshotClient.js.map

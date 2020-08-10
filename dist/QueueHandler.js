@@ -89,3 +89,4 @@ class QueueHandler extends events_1.EventEmitter {
     }
 }
 exports.QueueHandler = QueueHandler;
+//# sourceMappingURL=QueueHandler.js.map
