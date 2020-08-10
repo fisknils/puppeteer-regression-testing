@@ -6,6 +6,7 @@ const events_1 = require("events");
 const util_1 = require("util");
 const Logger_1 = require("./Logger");
 const QueueHandler_1 = require("./QueueHandler");
+const stringify = require("json-stringify-safe");
 const compare = util_1.promisify(require("resemblejs").compare);
 class Scraper extends events_1.EventEmitter {
     constructor() {
@@ -96,6 +97,7 @@ class Scraper extends events_1.EventEmitter {
         await this.init();
     }
     async statusUpdate(method, args) {
+        args = JSON.parse(stringify(args));
         this.emit("status", { method, args });
     }
     async onError(method, ex) {

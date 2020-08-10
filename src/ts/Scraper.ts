@@ -6,6 +6,7 @@ import { ResembleComparisonResult } from "resemblejs";
 import { Logger } from "./Logger";
 import { QueueHandler } from "./QueueHandler";
 
+const stringify = require("json-stringify-safe");
 const compare = promisify(require("resemblejs").compare);
 
 export class Scraper extends EventEmitter {
@@ -112,6 +113,7 @@ export class Scraper extends EventEmitter {
   }
 
   protected async statusUpdate(method: string, args: any) {
+    args = JSON.parse(stringify(args));
     this.emit("status", { method, args });
   }
 
