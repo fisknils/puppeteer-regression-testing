@@ -21,4 +21,3 @@ const args = {
         bot.addJob(args);
     });
 })();
-//# sourceMappingURL=Scraper.test.js.map

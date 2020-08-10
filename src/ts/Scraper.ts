@@ -126,7 +126,7 @@ export class Scraper extends EventEmitter {
   protected async visit(URLs: URL[]) {
     this.statusUpdate("visit", arguments);
     let urls = [].concat(URLs);
-
+    await this.init();
     const res = this.dualPage((page) =>
       page.goto(urls.shift(), { waitUntil: "networkidle0" })
     );
@@ -153,7 +153,7 @@ export class Scraper extends EventEmitter {
   protected async compareURLs(job: Job) {
     this.statusUpdate("compareURLs", job);
     const { URLs, Viewports, InjectJS } = job;
-
+    await this.reset();
     await this.visit(URLs);
     await this.getDomCount("body");
 

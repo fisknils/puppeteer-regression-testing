@@ -107,6 +107,7 @@ class Scraper extends events_1.EventEmitter {
     async visit(URLs) {
         this.statusUpdate("visit", arguments);
         let urls = [].concat(URLs);
+        await this.init();
         const res = this.dualPage((page) => page.goto(urls.shift(), { waitUntil: "networkidle0" }));
         return res;
     }
@@ -125,6 +126,7 @@ class Scraper extends events_1.EventEmitter {
     async compareURLs(job) {
         this.statusUpdate("compareURLs", job);
         const { URLs, Viewports, InjectJS } = job;
+        await this.reset();
         await this.visit(URLs);
         await this.getDomCount("body");
         if (InjectJS.enabled) {
@@ -196,4 +198,3 @@ class Scraper extends events_1.EventEmitter {
     }
 }
 exports.Scraper = Scraper;
-//# sourceMappingURL=Scraper.js.map
