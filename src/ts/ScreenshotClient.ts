@@ -146,7 +146,9 @@ export class ScreenshotClient extends EventEmitter {
 
     if (InjectJS.enabled) {
       this.statusUpdate("Inject JS", InjectJS);
-      await this.dualPage((page) => page.evaluate(() => eval(InjectJS.script)));
+      await this.dualPage((page) =>
+        page.evaluate((InjectJS) => eval(InjectJS.script), InjectJS)
+      );
     }
 
     let screenshot: IncompleteScreenshot = {
