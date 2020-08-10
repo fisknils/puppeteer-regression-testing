@@ -20,11 +20,19 @@ const args: test_arguments = {
   },
 };
 
+const args2 = Object.assign({}, args, {
+  URLs: [
+    new URL("http://absolutart.com.dev.synot.io/cn"),
+    new URL("https://www.absolutart.com/cn"),
+  ],
+});
+
 (async () => {
   const bot = new Scraper();
-  bot.on("dom-count", console.log);
-  bot.on("result", console.log);
+  bot.on("result", (result) => console.log(result.Path));
+  bot.on("status", console.log);
   bot.once("ready", () => {
     bot.addJob(args);
+    bot.addJob(args2);
   });
 })();

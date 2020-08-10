@@ -17,8 +17,6 @@ class Scraper extends events_1.EventEmitter {
         this.isBusy = false;
         this.isClosed = false;
         this._tick = 0;
-        this.on("done", this.startQuitTimeout);
-        this.on("compare-urls", this.stopQuitTimeout);
         this.on("add-job", this.addJob);
         this.on("start-job", () => (this.isBusy = true));
         this.on("did-job", () => (this.isBusy = false));
@@ -48,18 +46,8 @@ class Scraper extends events_1.EventEmitter {
             .then(() => this.emit("did-job", { job }))
             .catch((e) => this.emit("error", { method: "startJob", data: e }));
     }
-    async startQuitTimeout() {
-        const seconds = 5;
-        this.quitTimeout = setTimeout(() => {
-            this.emit("status", "No action in 5 seconds. I think I'm done.");
-            this.close();
-        }, seconds * 1000);
-    }
-    async stopQuitTimeout() {
-        clearTimeout(this.quitTimeout);
-    }
     async init() {
-        this.emit("status", "initializing");
+        this.statusUpdate("init", arguments);
         this.emit("start-init");
         try {
             this.browser = await puppeteer.launch();
@@ -69,7 +57,6 @@ class Scraper extends events_1.EventEmitter {
         }
         catch (e) {
             this.emit("error", { method: "init", data: e });
-            this.startQuitTimeout();
         }
         finally {
             this.emit("did-init");
@@ -78,10 +65,8 @@ class Scraper extends events_1.EventEmitter {
     }
     async tick() {
         this._tick++;
-        this.emit("tick");
-        if (!this.isClosed) {
-            setTimeout(() => this.tick(), 1000);
-        }
+        await this.getWork();
+        setTimeout(() => this.tick(), 1000);
     }
     async ready() {
         this.emit("ready");
@@ -89,11 +74,11 @@ class Scraper extends events_1.EventEmitter {
     }
     async close() {
         if (this.browser)
-            this.browser.close();
+            await this.browser.close();
         this.isClosed = true;
     }
     async reset() {
-        this.close();
+        await this.close();
         await this.init();
     }
     async statusUpdate(method, args) {
@@ -109,7 +94,6 @@ class Scraper extends events_1.EventEmitter {
     async visit(URLs) {
         this.statusUpdate("visit", arguments);
         let urls = [].concat(URLs);
-        await this.init();
         const res = this.dualPage((page) => page.goto(urls.shift(), { waitUntil: "networkidle0" }));
         return res;
     }
@@ -174,7 +158,6 @@ class Scraper extends events_1.EventEmitter {
         const res = await compare(Buffer.from(one.Base64, "base64"), Buffer.from(two.Base64, "base64"));
         const { isSameDimensions, misMatchPercentage } = res;
         const Base64 = res.getImageDataUrl();
-        console.log(one.URL);
         const { pathname } = new URL(one.URL);
         const [countOne, countTwo] = [one.DOMCount, two.DOMCount];
         const DOMCountDiff = +countOne - +countTwo;

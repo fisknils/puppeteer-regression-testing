@@ -13,11 +13,18 @@ const args = {
         script: "",
     },
 };
+const args2 = Object.assign({}, args, {
+    URLs: [
+        new URL("http://absolutart.com.dev.synot.io/cn"),
+        new URL("https://www.absolutart.com/cn"),
+    ],
+});
 (async () => {
     const bot = new Scraper_1.Scraper();
-    bot.on("dom-count", console.log);
-    bot.on("result", console.log);
+    bot.on("result", (result) => console.log(result.Path));
+    bot.on("status", console.log);
     bot.once("ready", () => {
         bot.addJob(args);
+        bot.addJob(args2);
     });
 })();

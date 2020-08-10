@@ -24,8 +24,6 @@ export class Scraper extends EventEmitter {
   constructor() {
     super();
 
-    this.on("done", this.startQuitTimeout);
-    this.on("compare-urls", this.stopQuitTimeout);
     this.on("add-job", this.addJob);
     this.on("start-job", () => (this.isBusy = true));
     this.on("did-job", () => (this.isBusy = false));
@@ -59,20 +57,8 @@ export class Scraper extends EventEmitter {
       .catch((e) => this.emit("error", { method: "startJob", data: e }));
   }
 
-  protected async startQuitTimeout() {
-    const seconds = 5;
-    this.quitTimeout = setTimeout(() => {
-      this.emit("status", "No action in 5 seconds. I think I'm done.");
-      this.close();
-    }, seconds * 1000);
-  }
-
-  protected async stopQuitTimeout() {
-    clearTimeout(this.quitTimeout);
-  }
-
   protected async init() {
-    this.emit("status", "initializing");
+    this.statusUpdate("init", arguments);
     this.emit("start-init");
     try {
       this.browser = await puppeteer.launch();
@@ -81,7 +67,6 @@ export class Scraper extends EventEmitter {
       this.isClosed = false;
     } catch (e) {
       this.emit("error", { method: "init", data: e });
-      this.startQuitTimeout();
     } finally {
       this.emit("did-init");
       this.ready();
@@ -90,11 +75,9 @@ export class Scraper extends EventEmitter {
 
   protected async tick() {
     this._tick++;
-    this.emit("tick");
+    await this.getWork();
 
-    if (!this.isClosed) {
-      setTimeout(() => this.tick(), 1000);
-    }
+    setTimeout(() => this.tick(), 1000);
   }
 
   protected async ready() {
@@ -103,12 +86,12 @@ export class Scraper extends EventEmitter {
   }
 
   protected async close() {
-    if (this.browser) this.browser.close();
+    if (this.browser) await this.browser.close();
     this.isClosed = true;
   }
 
   protected async reset() {
-    this.close();
+    await this.close();
     await this.init();
   }
 
@@ -128,7 +111,6 @@ export class Scraper extends EventEmitter {
   protected async visit(URLs: URL[]) {
     this.statusUpdate("visit", arguments);
     let urls = [].concat(URLs);
-    await this.init();
     const res = this.dualPage((page) =>
       page.goto(urls.shift(), { waitUntil: "networkidle0" })
     );
@@ -217,7 +199,6 @@ export class Scraper extends EventEmitter {
 
     const { isSameDimensions, misMatchPercentage } = res;
     const Base64 = res.getImageDataUrl();
-    console.log(one.URL);
     const { pathname } = new URL(one.URL);
     const [countOne, countTwo] = [one.DOMCount, two.DOMCount];
     const DOMCountDiff = +countOne - +countTwo;
