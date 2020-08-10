@@ -113,7 +113,7 @@ export class Scraper extends EventEmitter {
   }
 
   protected async statusUpdate(method: string, args: any) {
-    const _args = JSON.parse(stringify(Object.assign({}, args)));
+    const _args = JSON.parse(stringify(args));
     this.emit("status", { method, args });
   }
 
