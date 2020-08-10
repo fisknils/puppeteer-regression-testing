@@ -38,14 +38,16 @@ export class Scraper extends EventEmitter {
   }
 
   protected async getWork() {
-    this.statusUpdate("getWork", arguments);
     if (this.isBusy || !this.isReady) {
       return;
     }
     const job: Job = this.queue.shiftQueue();
     if (job) {
+      this.statusUpdate("getWork", arguments);
       await this.startJob(job);
+      return;
     }
+    this.statusUpdate("idle", arguments);
   }
 
   protected async startJob(job: Job) {
@@ -128,8 +130,8 @@ export class Scraper extends EventEmitter {
   protected async screenshot() {
     this.statusUpdate("screenshot", arguments);
     const [one, two] = [
-      await this.tabOne.screenshot({ encoding: "base64" }),
-      await this.tabTwo.screenshot({ encoding: "base64" }),
+      await this.tabOne.screenshot({ encoding: "base64", fullPage: true }),
+      await this.tabTwo.screenshot({ encoding: "base64", fullPage: true }),
     ];
     return { one, two };
   }
