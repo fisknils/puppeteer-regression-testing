@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Scraper = void 0;
+exports.ScreenshotClient = void 0;
 const puppeteer = require("puppeteer");
 const events_1 = require("events");
 const util_1 = require("util");
@@ -8,7 +8,7 @@ const Logger_1 = require("./Logger");
 const QueueHandler_1 = require("./QueueHandler");
 const stringify = require("json-stringify-safe");
 const compare = util_1.promisify(require("resemblejs").compare);
-class Scraper extends events_1.EventEmitter {
+class ScreenshotClient extends events_1.EventEmitter {
     constructor() {
         super();
         this.logger = new Logger_1.Logger("Scraper");
@@ -180,4 +180,4 @@ class Scraper extends events_1.EventEmitter {
         return [one.length, two.length];
     }
 }
-exports.Scraper = Scraper;
+exports.ScreenshotClient = ScreenshotClient;

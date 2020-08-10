@@ -1,4 +1,4 @@
 const { Logger } = require("./Logger");
 const { QueueHandler } = require("./QueueHandler");
-const { Scraper } = require("./Scraper");
-module.exports = { Logger, QueueHandler, Scraper };
+const { ScreenshotClient } = require("./ScreenshotClient");
+module.exports = { Logger, QueueHandler, ScreenshotClient };
