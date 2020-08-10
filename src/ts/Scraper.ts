@@ -1,5 +1,5 @@
 const puppeteer = require("puppeteer");
-import { Browser, Page } from "puppeteer";
+import { Browser, Page, ElementHandle } from "puppeteer";
 import { EventEmitter } from "events";
 import { promisify } from "util";
 import { ResembleComparisonResult } from "resemblejs";
@@ -9,50 +9,56 @@ import { QueueHandler } from "./QueueHandler";
 const compare = promisify(require("resemblejs").compare);
 
 export class Scraper extends EventEmitter {
-  private logger: Logger = new Logger("Scraper");
-  private queue: QueueHandler = new QueueHandler();
-  private browser: Browser;
-  private tabOne: Page;
-  private tabTwo: Page;
-  private quitTimeout: any;
-  private isReady: boolean = true;
-  private isBusy: boolean = false;
-  private isClosed: boolean = false;
-  private _tick = "tock";
+  protected logger: Logger = new Logger("Scraper");
+  protected queue: QueueHandler = new QueueHandler();
+  protected browser: Browser;
+  protected tabOne: Page;
+  protected tabTwo: Page;
+  protected quitTimeout: any;
+  protected isReady: boolean = true;
+  protected isBusy: boolean = false;
+  protected isClosed: boolean = false;
+  protected _tick: number = 0;
 
   constructor() {
     super();
+
     this.on("done", this.startQuitTimeout);
     this.on("compare-urls", this.stopQuitTimeout);
     this.on("add-job", this.addJob);
     this.on("start-job", () => (this.isBusy = true));
     this.on("did-job", () => (this.isBusy = false));
+    this.on("tick", this.getWork);
     this.once("ready", () => this.tick());
-
-    this.on("tick", console.log);
     this.init();
   }
 
-  addJob(job: Job) {
+  async addJob(job: Job) {
+    this.statusUpdate("addJob", arguments);
     this.queue.enqueue(job);
   }
 
-  private async getWork() {
+  protected async getWork() {
+    this.statusUpdate("getWork", arguments);
+    if (this.isBusy || !this.isReady) {
+      return;
+    }
     const job: Job = this.queue.shiftQueue();
     if (job) {
       await this.startJob(job);
     }
   }
 
-  private async startJob(job: Job) {
-    this.emit("start-job", job);
+  protected async startJob(job: Job) {
     await this.reset();
+    this.emit("start-job");
+    this.statusUpdate("startJob", arguments);
     await this.compareURLs(job)
       .then(() => this.emit("did-job", { job }))
       .catch((e) => this.emit("error", { method: "startJob", data: e }));
   }
 
-  private startQuitTimeout() {
+  protected async startQuitTimeout() {
     const seconds = 5;
     this.quitTimeout = setTimeout(() => {
       this.emit("status", "No action in 5 seconds. I think I'm done.");
@@ -60,11 +66,11 @@ export class Scraper extends EventEmitter {
     }, seconds * 1000);
   }
 
-  private stopQuitTimeout() {
+  protected async stopQuitTimeout() {
     clearTimeout(this.quitTimeout);
   }
 
-  private async init() {
+  protected async init() {
     this.emit("status", "initializing");
     this.emit("start-init");
     try {
@@ -81,91 +87,75 @@ export class Scraper extends EventEmitter {
     }
   }
 
-  private async tick() {
-    this._tick = this._tick === "tick" ? "tock" : "tick";
-    this.emit("tick", this._tick);
-    if (this.isBusy || !this.isReady) {
-      return;
-    }
-    await this.getWork();
+  protected async tick() {
+    this._tick++;
+    this.emit("tick");
+
     if (!this.isClosed) {
       setTimeout(() => this.tick(), 1000);
     }
   }
 
-  private ready() {
-    this.emit("status", "ready");
+  protected async ready() {
     this.emit("ready");
     this.isReady = true;
   }
 
-  async close() {
-    this.emit("start-close");
+  protected async close() {
     if (this.browser) this.browser.close();
     this.isClosed = true;
   }
 
-  async reset() {
-    this.emit("start-reset");
+  protected async reset() {
     this.close();
     await this.init();
-    this.emit("did-reset");
   }
 
-  private statusUpdate(method: string, args: any) {
+  protected async statusUpdate(method: string, args: any) {
     this.emit("status", { method, args });
   }
 
-  private onError(method: string, ex: Error) {
+  protected async onError(method: string, ex: Error) {
     this.emit("error", { method, ex });
   }
 
-  private async dualPage(callback: (page: Page) => Promise<any>) {
+  protected async dualPage(callback: (page: Page) => Promise<any>) {
     return await Promise.all([callback(this.tabOne), callback(this.tabTwo)]);
   }
 
-  private async visit(URLs: URL[]) {
-    this.emit("start-visit", URLs);
-
-    this.statusUpdate("visit", URLs);
+  protected async visit(URLs: URL[]) {
+    this.statusUpdate("visit", arguments);
     let urls = [].concat(URLs);
 
-    const res = this.dualPage((page) => page.goto(urls.shift()));
+    const res = this.dualPage((page) =>
+      page.goto(urls.shift(), { waitUntil: "networkidle0" })
+    );
 
-    this.emit("did-visit", URLs);
     return res;
   }
 
-  private async setWidth(width: number) {
-    this.emit("start-set-width", width);
-    this.statusUpdate("setWidth", { width });
+  protected async setWidth(width: number) {
+    this.statusUpdate("setWidth", arguments);
     await this.dualPage((page) =>
       page.setViewport({ width: width, height: 100 })
     );
-    this.emit("did-set-width", width);
   }
 
-  private async screenshot(selector: string = "body") {
-    this.statusUpdate("screenshot", { selector });
-    const elements = await this.dualPage((page) => page.$(selector));
-
-    return {
-      one: await elements.shift().screenshot({ encoding: "base64" }),
-      two: await elements.shift().screenshot({ encoding: "base64" }),
-    };
+  protected async screenshot() {
+    this.statusUpdate("screenshot", arguments);
+    const [one, two] = [
+      await this.tabOne.screenshot({ encoding: "base64" }),
+      await this.tabTwo.screenshot({ encoding: "base64" }),
+    ];
+    return { one, two };
   }
 
-  private async compareURLs(job: Job) {
-    const { URLs, Viewports, Selectors, InjectJS } = job;
-    this.emit("compare-urls", { URLs, Viewports, Selectors, InjectJS });
-    this.statusUpdate("compareURL", {
-      URLs,
-      Viewports,
-      Selectors,
-      InjectJS,
-    });
+  protected async compareURLs(job: Job) {
+    this.statusUpdate("compareURLs", job);
+    const { URLs, Viewports, InjectJS } = job;
 
     await this.visit(URLs);
+    await this.getDomCount("body");
 
     if (InjectJS.enabled) {
       this.statusUpdate("Inject JS", InjectJS);
@@ -183,36 +173,42 @@ export class Scraper extends EventEmitter {
       screenshot.Width = Viewports[vi];
       await this.setWidth(screenshot.Width);
 
-      for (let si in Selectors) {
-        screenshot.Selector = Selectors[si];
-        const { one, two } = await this.screenshot(screenshot.Selector);
-        const [urlOne, urlTwo] = URLs;
+      const { one, two } = await this.screenshot();
+      const [urlOne, urlTwo] = URLs;
 
-        await this.getScreenshotDiff([
-          Object.assign({}, screenshot, {
-            URL: urlOne,
-            Base64: one,
-          }),
-          Object.assign({}, screenshot, {
-            URL: urlTwo,
-            Base64: two,
-          }),
-        ]);
-      }
+      const [countOne, countTwo] = await this.getDomCount();
+
+      const diff: ScreenshotDiff = await this.getScreenshotDiff([
+        Object.assign({}, screenshot, {
+          URL: urlOne,
+          URLString: urlOne.toString(),
+          Base64: one,
+          DOMCount: countOne,
+        }),
+        Object.assign({}, screenshot, {
+          URL: urlTwo,
+          URLString: urlOne.toString(),
+          Base64: two,
+          DOMCount: countTwo,
+        }),
+      ]);
+      diff.Base64 = diff.Base64.replace(/^data:image\/png;base64,/, "");
+
+      this.emit("result", diff);
     }
 
     this.statusUpdate("comparedURL", {
       URLs,
       Viewports,
-      Selectors,
       InjectJS,
     });
     this.emit("done");
   }
 
-  private async getScreenshotDiff(
+  protected async getScreenshotDiff(
     Screenshots: Array<Screenshot>
   ): Promise<ScreenshotDiff> {
+    this.statusUpdate("getScreenshotDiff", arguments);
     const [one, two] = Screenshots;
 
     const res: ResembleComparisonResult = await compare(
@@ -224,6 +220,8 @@ export class Scraper extends EventEmitter {
     const Base64 = res.getImageDataUrl();
     const { Selector, URL, Width } = Screenshots[0];
     const { pathname } = URL;
+    const [countOne, countTwo] = [one.DOMCount, two.DOMCount];
+    const DOMCountDiff = +countOne - +countTwo;
 
     const ScreenshotDiff: ScreenshotDiff = {
       Selector,
@@ -233,11 +231,16 @@ export class Scraper extends EventEmitter {
       Screenshots,
       isSameDimensions,
       misMatchPercentage,
+      DOMCountDiff,
     };
 
-    this.emit("result", ScreenshotDiff);
-
     return ScreenshotDiff;
+  }
+
+  protected async getDomCount(selector: string = "*"): Promise<number[]> {
+    this.statusUpdate("getDomCount", arguments);
+    const [one, two] = await this.dualPage((page) => page.$$(selector));
+    return [one.length, two.length];
   }
 }
 
@@ -254,13 +257,16 @@ type ScreenshotDiff = {
   Screenshots: Array<Screenshot>;
   misMatchPercentage: number;
   isSameDimensions: boolean;
+  DOMCountDiff: number;
 };
 
 type Screenshot = {
   Base64: string;
   URL: URL;
+  URLString?: string;
   Selector: string;
   Width: number;
+  DOMCount: number;
 };
 
 type IncompleteScreenshot = {
@@ -273,6 +279,5 @@ type IncompleteScreenshot = {
 type Job = {
   URLs: URL[];
   Viewports: Array<number>;
-  Selectors: Array<string>;
   InjectJS: InjectJS;
 };

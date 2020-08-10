@@ -22,16 +22,8 @@ const args: test_arguments = {
 
 (async () => {
   const bot = new Scraper();
-  bot.on("status", console.log);
-  bot.on("result", (args) => {
-    let { Screenshots, isSameDimensions, misMatchPercentage } = args;
-    args.Screenshots = args.Screenshots.map((screenshot: any) => {
-      screenshot.Base64 = screenshot.Base64.length;
-      return screenshot;
-    });
-    args.Base64 = args.Base64.length;
-    console.log(args);
-  });
+  bot.on("dom-count", console.log);
+  bot.on("result", console.log);
   bot.once("ready", () => {
     bot.addJob(args);
   });

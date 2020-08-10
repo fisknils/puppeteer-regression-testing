@@ -1,3 +1,5 @@
 node_modules
 images
 .DS_Store
+src/ts/index.tests.ts
+src/ts/Scraper.test.ts

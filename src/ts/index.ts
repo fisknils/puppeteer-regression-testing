@@ -1,3 +1,4 @@
-export { Logger } from "./Logger";
-export { QueueHandler } from "./QueueHandler";
-export { Scraper } from "./Scraper";
+const { Logger } = require("./Logger");
+const { QueueHandler } = require("./QueueHandler");
+const { Scraper } = require("./Scraper");
+module.exports = { Logger, QueueHandler, Scraper };
