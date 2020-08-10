@@ -217,13 +217,12 @@ export class Scraper extends EventEmitter {
 
     const { isSameDimensions, misMatchPercentage } = res;
     const Base64 = res.getImageDataUrl();
-    const { URL, Width } = Screenshots[0];
     const { pathname } = one.URL;
     const [countOne, countTwo] = [one.DOMCount, two.DOMCount];
     const DOMCountDiff = +countOne - +countTwo;
 
     const ScreenshotDiff: ScreenshotDiff = {
-      Width,
+      Width: one.Width,
       Path: pathname,
       Base64,
       Screenshots,

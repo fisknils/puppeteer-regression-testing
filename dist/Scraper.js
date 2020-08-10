@@ -174,12 +174,11 @@ class Scraper extends events_1.EventEmitter {
         const res = await compare(Buffer.from(one.Base64, "base64"), Buffer.from(two.Base64, "base64"));
         const { isSameDimensions, misMatchPercentage } = res;
         const Base64 = res.getImageDataUrl();
-        const { URL, Width } = Screenshots[0];
         const { pathname } = one.URL;
         const [countOne, countTwo] = [one.DOMCount, two.DOMCount];
         const DOMCountDiff = +countOne - +countTwo;
         const ScreenshotDiff = {
-            Width,
+            Width: one.Width,
             Path: pathname,
             Base64,
             Screenshots,
