@@ -94,7 +94,7 @@ class Scraper extends events_1.EventEmitter {
     async visit(URLs) {
         this.statusUpdate("visit", arguments);
         let urls = [].concat(URLs);
-        const res = this.dualPage((page) => page.goto(urls.shift(), { waitUntil: "networkidle0" }));
+        const res = this.dualPage((page) => page.goto(urls.shift(), { waitUntil: "networkidle0", timeout: 0 }));
         return res;
     }
     async setWidth(width) {
