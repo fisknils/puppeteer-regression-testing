@@ -119,7 +119,7 @@ class Scraper extends events_1.EventEmitter {
         await this.getDomCount("body");
         if (InjectJS.enabled) {
             this.statusUpdate("Inject JS", InjectJS);
-            await this.dualPage((page) => page.evaluate(InjectJS.script));
+            await this.dualPage((page) => page.evaluate(() => eval(InjectJS.script)));
         }
         let screenshot = {
             Base64: null,

@@ -2,8 +2,6 @@ import { EventEmitter } from "events";
 const PouchDB = require("pouchdb");
 const stringify = require("json-stringify-safe");
 
-type LogType = "error" | "warning" | "notice" | "status";
-
 export class Logger extends EventEmitter {
   DB: PouchDB.Database;
 
@@ -46,3 +44,5 @@ export class Logger extends EventEmitter {
     this.log("status", { data });
   }
 }
+
+export type LogType = "error" | "warning" | "notice" | "status";

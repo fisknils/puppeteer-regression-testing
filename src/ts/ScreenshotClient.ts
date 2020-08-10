@@ -9,7 +9,7 @@ import { QueueHandler } from "./QueueHandler";
 const stringify = require("json-stringify-safe");
 const compare = promisify(require("resemblejs").compare);
 
-export class Scraper extends EventEmitter {
+export class ScreenshotClient extends EventEmitter {
   protected logger: Logger = new Logger("Scraper");
   protected queue: QueueHandler = new QueueHandler();
   protected browser: Browser;
@@ -145,7 +145,7 @@ export class Scraper extends EventEmitter {
 
     if (InjectJS.enabled) {
       this.statusUpdate("Inject JS", InjectJS);
-      await this.dualPage((page) => page.evaluate(InjectJS.script));
+      await this.dualPage((page) => page.evaluate(() => eval(InjectJS.script)));
     }
 
     let screenshot: IncompleteScreenshot = {
@@ -230,7 +230,7 @@ export type InjectJS = {
   script: string;
 };
 
-type ScreenshotDiff = {
+export type ScreenshotDiff = {
   Width: number;
   Path: string;
   Base64: string | null;
@@ -240,20 +240,20 @@ type ScreenshotDiff = {
   DOMCountDiff: number;
 };
 
-type Screenshot = {
+export type Screenshot = {
   Base64: string;
   URL: string;
   Width: number;
   DOMCount: number;
 };
 
-type IncompleteScreenshot = {
+export type IncompleteScreenshot = {
   Base64: string | null;
   URL: string | null;
   Width: number | null;
 };
 
-type Job = {
+export type Job = {
   URLs: URL[];
   Viewports: Array<number>;
   InjectJS: InjectJS;

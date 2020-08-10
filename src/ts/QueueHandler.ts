@@ -1,25 +1,5 @@
 import { EventEmitter } from "events";
 
-type Queue = Queued[];
-
-type Queued = {
-  item: any;
-  enqueued: number;
-  status: "waiting" | "running" | "done" | "error";
-};
-
-type PartialQueued = {
-  item?: any;
-  enqueued?: number;
-  status?: "waiting" | "running" | "done" | "error";
-};
-
-type QueueHandlerNotice = {
-  method: string;
-  message: string;
-  params: IArguments;
-};
-
 const where = (array: Array<any>, where: PartialQueued, limit: number = 0) => {
   const results: Array<any> = array.filter((item) => {
     const _queued = JSON.stringify(item);
@@ -113,3 +93,23 @@ export class QueueHandler extends EventEmitter {
     return match.item;
   }
 }
+
+export type Queue = Queued[];
+
+export type Queued = {
+  item: any;
+  enqueued: number;
+  status: "waiting" | "running" | "done" | "error";
+};
+
+export type PartialQueued = {
+  item?: any;
+  enqueued?: number;
+  status?: "waiting" | "running" | "done" | "error";
+};
+
+export type QueueHandlerNotice = {
+  method: string;
+  message: string;
+  params: IArguments;
+};
