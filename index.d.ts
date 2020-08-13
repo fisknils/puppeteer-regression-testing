@@ -1,10 +1,10 @@
 declare module "puppeteer-regression-testing" {
-  export type InjectJS = {
+  type InjectJS = {
     enabled: boolean;
     script: string;
   };
 
-  export type ScreenshotDiff = {
+  type ScreenshotDiff = {
     Width: number;
     Path: string;
     Base64: string | null;
@@ -14,20 +14,14 @@ declare module "puppeteer-regression-testing" {
     DOMCountDiff: number;
   };
 
-  export type Screenshot = {
+  type Screenshot = {
     Base64: string;
     URL: string;
     Width: number;
     DOMCount: number;
   };
 
-  export type IncompleteScreenshot = {
-    Base64: string | null;
-    URL: string | null;
-    Width: number | null;
-  };
-
-  export type Job = {
+  type Job = {
     URLs: URL[];
     Viewports: Array<number>;
     InjectJS: InjectJS;
