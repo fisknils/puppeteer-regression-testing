@@ -98,7 +98,7 @@ export class ScreenshotClient extends EventEmitter {
     await this.init();
   }
 
-  protected async statusUpdate(method: string, args: any) {
+  protected async statusUpdate(method: string, args: any): Promise<void> {
     const _args = JSON.parse(stringify(args));
     this.emit("status", { method, args });
   }
@@ -137,7 +137,7 @@ export class ScreenshotClient extends EventEmitter {
     return { one, two };
   }
 
-  protected async compareURLs(job: Job) {
+  protected async compareURLs(job: Job): Promise<void> {
     this.statusUpdate("compareURLs", job);
     const { URLs, Viewports, InjectJS } = job;
     await this.reset();
