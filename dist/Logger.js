@@ -24,4 +24,3 @@ class Logger extends events_1.EventEmitter {
     }
 }
 exports.Logger = Logger;
-//# sourceMappingURL=Logger.js.map

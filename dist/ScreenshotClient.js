@@ -187,4 +187,3 @@ class ScreenshotClient extends events_1.EventEmitter {
     }
 }
 exports.ScreenshotClient = ScreenshotClient;
-//# sourceMappingURL=ScreenshotClient.js.map
