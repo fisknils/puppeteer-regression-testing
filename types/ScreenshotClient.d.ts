@@ -31,7 +31,7 @@ export declare class ScreenshotClient extends EventEmitter {
         two: string;
     }>;
     protected compareURLs(job: Job): Promise<void>;
-    protected getScreenshotDiff(Screenshots: Array<Screenshot>): Promise<ScreenshotDiff>;
+    protected getScreenshotDiff(Screenshots: Screenshot[]): Promise<ScreenshotDiff>;
     protected getDomCount(selector?: string): Promise<number[]>;
 }
 export declare type InjectJS = {
@@ -42,7 +42,7 @@ export declare type ScreenshotDiff = {
     Width: number;
     Path: string;
     Base64: string | null;
-    Screenshots: Array<Screenshot>;
+    Screenshots: Screenshot[];
     misMatchPercentage: number;
     isSameDimensions: boolean;
     DOMCountDiff: number;
@@ -60,6 +60,6 @@ export declare type IncompleteScreenshot = {
 };
 export declare type Job = {
     URLs: URL[];
-    Viewports: Array<number>;
+    Viewports: number[];
     InjectJS: InjectJS;
 };

@@ -110,8 +110,13 @@ class ScreenshotClient extends events_1.EventEmitter {
         return { one, two };
     }
     async compareURLs(job) {
-        this.logger.status("compareURLs", { job });
         const { URLs, Viewports, InjectJS } = job;
+        let screenshot = {
+            Base64: null,
+            URL: null,
+            Width: null,
+        };
+        this.logger.status("compareURLs", { job });
         await this.reset();
         await this.visit(URLs);
         await this.getDomCount("body");
@@ -119,11 +124,6 @@ class ScreenshotClient extends events_1.EventEmitter {
             this.logger.status("Inject JS", { InjectJS });
             await this.dualPage((page) => page.evaluate((InjectJS) => eval(InjectJS.script), InjectJS));
         }
-        let screenshot = {
-            Base64: null,
-            URL: null,
-            Width: null,
-        };
         for (let vi in Viewports) {
             screenshot.Width = Viewports[vi];
             await this.setWidth(screenshot.Width);

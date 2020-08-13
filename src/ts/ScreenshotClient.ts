@@ -72,6 +72,7 @@ export class ScreenshotClient extends EventEmitter {
     await this.reset();
     this.emit("start-job");
     this.logger.status("startJob", { job });
+
     await this.compareURLs(job)
       .then(() => this.emit("did-job", { job }))
       .catch((e) => this.emit("error", { method: "startJob", data: e }));
@@ -137,8 +138,15 @@ export class ScreenshotClient extends EventEmitter {
   }
 
   protected async compareURLs(job: Job): Promise<void> {
-    this.logger.status("compareURLs", { job });
     const { URLs, Viewports, InjectJS } = job;
+    let screenshot: IncompleteScreenshot = {
+      Base64: null,
+      URL: null,
+      Width: null,
+    };
+
+    this.logger.status("compareURLs", { job });
+
     await this.reset();
     await this.visit(URLs);
     await this.getDomCount("body");
@@ -149,12 +157,6 @@ export class ScreenshotClient extends EventEmitter {
         page.evaluate((InjectJS) => eval(InjectJS.script), InjectJS)
       );
     }
-
-    let screenshot: IncompleteScreenshot = {
-      Base64: null,
-      URL: null,
-      Width: null,
-    };
 
     for (let vi in Viewports) {
       screenshot.Width = Viewports[vi];
@@ -191,7 +193,7 @@ export class ScreenshotClient extends EventEmitter {
   }
 
   protected async getScreenshotDiff(
-    Screenshots: Array<Screenshot>
+    Screenshots: Screenshot[]
   ): Promise<ScreenshotDiff> {
     this.logger.status("getScreenshotDiff", []);
     const [one, two] = Screenshots;
@@ -236,7 +238,7 @@ export type ScreenshotDiff = {
   Width: number;
   Path: string;
   Base64: string | null;
-  Screenshots: Array<Screenshot>;
+  Screenshots: Screenshot[];
   misMatchPercentage: number;
   isSameDimensions: boolean;
   DOMCountDiff: number;
@@ -257,6 +259,6 @@ export type IncompleteScreenshot = {
 
 export type Job = {
   URLs: URL[];
-  Viewports: Array<number>;
+  Viewports: number[];
   InjectJS: InjectJS;
 };
