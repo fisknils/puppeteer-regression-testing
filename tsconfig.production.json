@@ -9,7 +9,7 @@
         "sourceMap": false,
         "outDir": "dist",
         "declaration": true,
-        "declarationDir": "."
+        "declarationDir": "types"
     },
     "include": ["src/**/*"],
     "exclude": [
