@@ -1,5 +1,6 @@
-const { Logger } = require("./Logger");
-const { QueueHandler } = require("./QueueHandler");
-const { ScreenshotClient } = require("./ScreenshotClient");
-module.exports = { Logger, QueueHandler, ScreenshotClient };
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Logger = require("./Logger");
+exports.ScreenshotClient = require("./ScreenshotClient");
+exports.QueueHandler = require("./QueueHandler");
 //# sourceMappingURL=index.js.map

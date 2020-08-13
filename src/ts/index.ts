@@ -1,4 +1,3 @@
-const { Logger } = require("./Logger");
-const { QueueHandler } = require("./QueueHandler");
-const { ScreenshotClient } = require("./ScreenshotClient");
-module.exports = { Logger, QueueHandler, ScreenshotClient };
+export * as Logger from "./Logger";
+export * as ScreenshotClient from "./ScreenshotClient";
+export * as QueueHandler from "./QueueHandler";

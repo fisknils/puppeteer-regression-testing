@@ -1,31 +1,47 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ScreenshotClient = void 0;
-const puppeteer = require("puppeteer");
 const events_1 = require("events");
 const util_1 = require("util");
 const Logger_1 = require("./Logger");
 const QueueHandler_1 = require("./QueueHandler");
 const stringify = require("json-stringify-safe");
 const compare = util_1.promisify(require("resemblejs").compare);
+const puppeteer = require("puppeteer");
 class ScreenshotClient extends events_1.EventEmitter {
     constructor() {
         super();
-        this.logger = new Logger_1.Logger("Scraper");
+        this.logger = new Logger_1.Logger();
         this.queue = new QueueHandler_1.QueueHandler();
         this.isReady = true;
         this.isBusy = false;
         this.isClosed = false;
         this._tick = 0;
+        this.once("ready", () => this.tick());
+        this.on("tick", this.getWork);
         this.on("add-job", this.addJob);
         this.on("start-job", () => (this.isBusy = true));
         this.on("did-job", () => (this.isBusy = false));
-        this.on("tick", this.getWork);
-        this.once("ready", () => this.tick());
         this.init();
     }
+    async init() {
+        this.logger.status("init", []);
+        try {
+            this.browser = await puppeteer.launch();
+            this.tabOne = await this.browser.newPage();
+            this.tabTwo = await this.browser.newPage();
+            this.isClosed = false;
+        }
+        catch (e) {
+            this.logger.error("init", e);
+        }
+        finally {
+            this.emit("did-init");
+            this.ready();
+        }
+    }
     async addJob(job) {
-        this.statusUpdate("addJob", arguments);
+        this.logger.status("addJob", { job });
         this.queue.enqueue(job);
     }
     async getWork() {
@@ -48,23 +64,6 @@ class ScreenshotClient extends events_1.EventEmitter {
         await this.compareURLs(job)
             .then(() => this.emit("did-job", { job }))
             .catch((e) => this.emit("error", { method: "startJob", data: e }));
-    }
-    async init() {
-        this.statusUpdate("init", arguments);
-        this.emit("start-init");
-        try {
-            this.browser = await puppeteer.launch();
-            this.tabOne = await this.browser.newPage();
-            this.tabTwo = await this.browser.newPage();
-            this.isClosed = false;
-        }
-        catch (e) {
-            this.emit("error", { method: "init", data: e });
-        }
-        finally {
-            this.emit("did-init");
-            this.ready();
-        }
     }
     async tick() {
         this._tick++;
@@ -107,8 +106,14 @@ class ScreenshotClient extends events_1.EventEmitter {
     async screenshot() {
         this.statusUpdate("screenshot", arguments);
         const [one, two] = [
-            await this.tabOne.screenshot({ encoding: "base64", fullPage: true }),
-            await this.tabTwo.screenshot({ encoding: "base64", fullPage: true }),
+            await this.tabOne.screenshot({
+                encoding: "base64",
+                fullPage: true,
+            }),
+            await this.tabTwo.screenshot({
+                encoding: "base64",
+                fullPage: true,
+            }),
         ];
         return { one, two };
     }
