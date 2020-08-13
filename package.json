@@ -1,6 +1,6 @@
 {
   "name": "puppeteer-regression-testing",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -29,7 +29,6 @@
     "resemblejs": "^3.2.5"
   },
   "devDependencies": {
-    "@jsdevtools/version-bump-prompt": "^6.0.6",
     "rimraf": "^3.0.2",
     "typescript": "^3.9.7"
   },
