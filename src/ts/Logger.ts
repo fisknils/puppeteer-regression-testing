@@ -1,47 +1,29 @@
 import { EventEmitter } from "events";
-const PouchDB = require("pouchdb");
 const stringify = require("json-stringify-safe");
 
 export class Logger extends EventEmitter {
-  DB: PouchDB.Database;
-
-  constructor(namespace: string) {
-    super();
-    const db_files = "db/" + namespace + "-Logger";
-    this.DB = new PouchDB(db_files);
-  }
-
   log(type: LogType, params: any) {
-    const timestamp = +new Date();
     const typeStringified = [type, "stringified"].join("-");
     const paramsStringified = stringify(params);
 
     this.emit(type, params);
     this.emit(typeStringified, paramsStringified);
-
-    const doc = {
-      type,
-      params,
-      timestamp,
-    };
-
-    this.DB.post(doc);
   }
 
-  error(error: any, data: any): void {
-    this.log("error", { error, data });
+  error(label: string, data: any): void {
+    this.log("error", { label, data });
   }
 
-  warning(data: any): void {
-    this.log("warning", { data });
+  warning(label: string, data: any): void {
+    this.log("warning", { label, data });
   }
 
-  notice(data: any): void {
-    this.log("notice", { data });
+  notice(label: string, data: any): void {
+    this.log("notice", { label, data });
   }
 
-  status(data: any): void {
-    this.log("status", { data });
+  status(label: string, data: any, verbosity: number = 0): void {
+    this.log("status", { label, data });
   }
 }
 
