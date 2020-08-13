@@ -61,17 +61,17 @@ export class ScreenshotClient extends EventEmitter {
     const job: Job = this.queue.shiftQueue();
 
     if (job) {
-      this.statusUpdate("getWork", arguments);
+      this.logger.status("getWork", []);
       await this.startJob(job);
       return;
     }
-    this.statusUpdate("idle", arguments);
+    this.logger.status("idle", []);
   }
 
   protected async startJob(job: Job) {
     await this.reset();
     this.emit("start-job");
-    this.statusUpdate("startJob", arguments);
+    this.logger.status("startJob", { job });
     console.log(job);
     await this.compareURLs(job)
       .then(() => this.emit("did-job", { job }))
@@ -100,21 +100,13 @@ export class ScreenshotClient extends EventEmitter {
     await this.init();
   }
 
-  protected async statusUpdate(method: string, args: any): Promise<void> {
-    const _args = JSON.parse(stringify(args));
-    this.emit("status", { method, args });
-  }
-
-  protected async onError(method: string, ex: Error) {
-    this.emit("error", { method, ex });
-  }
-
   protected async dualPage(callback: (page: Page) => Promise<any>) {
     return await Promise.all([callback(this.tabOne), callback(this.tabTwo)]);
   }
 
   protected async visit(URLs: URL[]) {
-    this.statusUpdate("visit", arguments);
+    this.logger.status("visit", { URLs });
+
     let urls = [].concat(URLs);
     const res = this.dualPage((page) =>
       page.goto(urls.shift(), { waitUntil: "networkidle0", timeout: 0 })
@@ -124,14 +116,14 @@ export class ScreenshotClient extends EventEmitter {
   }
 
   protected async setWidth(width: number) {
-    this.statusUpdate("setWidth", arguments);
+    this.logger.status("setWidth", width);
     await this.dualPage((page) =>
       page.setViewport({ width: width, height: 100 })
     );
   }
 
   protected async screenshot() {
-    this.statusUpdate("screenshot", arguments);
+    this.logger.status("screenshot", []);
     const [one, two] = [
       await this.tabOne.screenshot({
         encoding: "base64",
@@ -146,14 +138,14 @@ export class ScreenshotClient extends EventEmitter {
   }
 
   protected async compareURLs(job: Job): Promise<void> {
-    this.statusUpdate("compareURLs", job);
+    this.logger.status("compareURLs", { job });
     const { URLs, Viewports, InjectJS } = job;
     await this.reset();
     await this.visit(URLs);
     await this.getDomCount("body");
 
     if (InjectJS.enabled) {
-      this.statusUpdate("Inject JS", InjectJS);
+      this.logger.status("Inject JS", { InjectJS });
       await this.dualPage((page) =>
         page.evaluate((InjectJS) => eval(InjectJS.script), InjectJS)
       );
@@ -191,7 +183,7 @@ export class ScreenshotClient extends EventEmitter {
       this.emit("result", diff);
     }
 
-    this.statusUpdate("comparedURL", {
+    this.logger.status("comparedURL", {
       URLs,
       Viewports,
       InjectJS,
@@ -202,7 +194,7 @@ export class ScreenshotClient extends EventEmitter {
   protected async getScreenshotDiff(
     Screenshots: Array<Screenshot>
   ): Promise<ScreenshotDiff> {
-    this.statusUpdate("getScreenshotDiff", arguments);
+    this.logger.status("getScreenshotDiff", []);
     const [one, two] = Screenshots;
 
     const res: ResembleComparisonResult = await compare(
@@ -230,7 +222,7 @@ export class ScreenshotClient extends EventEmitter {
   }
 
   protected async getDomCount(selector: string = "*"): Promise<number[]> {
-    this.statusUpdate("getDomCount", arguments);
+    this.logger.status("getDomCount", []);
     const [one, two] = await this.dualPage((page) => page.$$(selector));
     return [one.length, two.length];
   }

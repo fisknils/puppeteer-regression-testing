@@ -23,8 +23,6 @@ export declare class ScreenshotClient extends EventEmitter {
     protected ready(): Promise<void>;
     protected close(): Promise<void>;
     protected reset(): Promise<void>;
-    protected statusUpdate(method: string, args: any): Promise<void>;
-    protected onError(method: string, ex: Error): Promise<void>;
     protected dualPage(callback: (page: Page) => Promise<any>): Promise<[any, any]>;
     protected visit(URLs: URL[]): Promise<[any, any]>;
     protected setWidth(width: number): Promise<void>;
