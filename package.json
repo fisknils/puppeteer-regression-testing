@@ -1,6 +1,6 @@
 {
   "name": "puppeteer-regression-testing",
-  "version": "1.2.1",
+  "version": "1.2.3",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -8,7 +8,10 @@
     "prod": "rimraf dist && npm run production",
     "dev": "npm run development",
     "production": "tsc --project tsconfig.production.json",
-    "development": "tsc --project tsconfig.development.json"
+    "development": "tsc --project tsconfig.development.json",
+    "push-patch": "npm run dev && bump patch && git add . -A && git commit && git push",
+    "push-minor": "npm run dev && bump minor && git add . -A && git commit && git push",
+    "push-major": "npm run dev && bump major && git add . -A && git commit && git push"
   },
   "keywords": [],
   "author": "",
@@ -26,7 +29,13 @@
     "resemblejs": "^3.2.5"
   },
   "devDependencies": {
+    "@jsdevtools/version-bump-prompt": "^6.0.6",
     "rimraf": "^3.0.2",
     "typescript": "^3.9.7"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": ""
+    }
   }
 }
