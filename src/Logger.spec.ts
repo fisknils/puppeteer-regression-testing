@@ -35,7 +35,7 @@ it("emits notice messages", () => emitTest("notice"));
 it("emits warning messages", () => emitTest("warning"));
 it("emits error messages", () => emitTest("error"));
 
-it("removes circular references", async () => {
+it("removes circular references from stringifiedData", async () => {
   expect.assertions(1);
   const log = new Logger();
   const testData = { circular: null };
