@@ -6,6 +6,7 @@ export declare class Logger extends EventEmitter {
 export declare type LogType = "error" | "warning" | "notice" | "status" | "info";
 export declare type LogMessage = {
     label: string;
-    data: object;
+    data: Object;
+    stringifiedData: string;
 };
 //# sourceMappingURL=Logger.d.ts.map
