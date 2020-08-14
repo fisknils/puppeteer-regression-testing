@@ -1,4 +1,4 @@
-import { Browser, Page, ElementHandle } from "puppeteer";
+import { Browser, Page } from "puppeteer";
 import { EventEmitter } from "events";
 import { promisify } from "util";
 import { ResembleComparisonResult } from "resemblejs";
@@ -33,7 +33,7 @@ export class ScreenshotClient extends EventEmitter {
   }
 
   protected async init() {
-    this.logger.status("init", []);
+    this.logger.log("status", "init", []);
 
     try {
       this.browser = await puppeteer.launch();
@@ -41,7 +41,7 @@ export class ScreenshotClient extends EventEmitter {
       this.tabTwo = await this.browser.newPage();
       this.isClosed = false;
     } catch (e) {
-      this.logger.error("init", e);
+      this.logger.log("error", "init", e);
     } finally {
       this.emit("did-init");
       this.ready();
@@ -49,7 +49,7 @@ export class ScreenshotClient extends EventEmitter {
   }
 
   async addJob(job: Job) {
-    this.logger.status("addJob", { job });
+    this.logger.log("status", "addJob", { job });
     this.queue.enqueue(job);
   }
 
@@ -61,17 +61,17 @@ export class ScreenshotClient extends EventEmitter {
     const job: Job = this.queue.shiftQueue();
 
     if (job) {
-      this.logger.status("getWork", []);
+      this.logger.log("status", "getWork", []);
       await this.startJob(job);
       return;
     }
-    this.logger.status("idle", []);
+    this.logger.log("status", "idle", []);
   }
 
   protected async startJob(job: Job) {
     await this.reset();
     this.emit("start-job");
-    this.logger.status("startJob", { job });
+    this.logger.log("status", "startJob", { job });
 
     await this.compareURLs(job)
       .then(() => this.emit("did-job", { job }))
@@ -105,7 +105,7 @@ export class ScreenshotClient extends EventEmitter {
   }
 
   protected async visit(URLs: URL[]) {
-    this.logger.status("visit", { URLs });
+    this.logger.log("status", "visit", { URLs });
 
     let urls = [].concat(URLs);
     const res = this.dualPage((page) =>
@@ -116,14 +116,14 @@ export class ScreenshotClient extends EventEmitter {
   }
 
   protected async setWidth(width: number) {
-    this.logger.status("setWidth", width);
+    this.logger.log("status", "setWidth", { width });
     await this.dualPage((page) =>
       page.setViewport({ width: width, height: 100 })
     );
   }
 
   protected async screenshot() {
-    this.logger.status("screenshot", []);
+    this.logger.log("status", "screenshot");
     const [one, two] = [
       await this.tabOne.screenshot({
         encoding: "base64",
@@ -145,14 +145,14 @@ export class ScreenshotClient extends EventEmitter {
       Width: null,
     };
 
-    this.logger.status("compareURLs", { job });
+    this.logger.log("status", "compareURLs", { job });
 
     await this.reset();
     await this.visit(URLs);
     await this.getDomCount("body");
 
     if (InjectJS.enabled) {
-      this.logger.status("Inject JS", { InjectJS });
+      this.logger.log("status", "Inject JS", { InjectJS });
       await this.dualPage((page) =>
         page.evaluate((InjectJS) => eval(InjectJS.script), InjectJS)
       );
@@ -184,7 +184,7 @@ export class ScreenshotClient extends EventEmitter {
       this.emit("result", diff);
     }
 
-    this.logger.status("comparedURL", {
+    this.logger.log("status", "comparedURL", {
       URLs,
       Viewports,
       InjectJS,
@@ -195,7 +195,7 @@ export class ScreenshotClient extends EventEmitter {
   protected async getScreenshotDiff(
     Screenshots: Screenshot[]
   ): Promise<ScreenshotDiff> {
-    this.logger.status("getScreenshotDiff", []);
+    this.logger.log("status", "getScreenshotDiff", []);
     const [one, two] = Screenshots;
 
     const res: ResembleComparisonResult = await compare(
@@ -223,7 +223,7 @@ export class ScreenshotClient extends EventEmitter {
   }
 
   protected async getDomCount(selector: string = "*"): Promise<number[]> {
-    this.logger.status("getDomCount", []);
+    this.logger.log("status", "getDomCount", []);
     const [one, two] = await this.dualPage((page) => page.$$(selector));
     return [one.length, two.length];
   }

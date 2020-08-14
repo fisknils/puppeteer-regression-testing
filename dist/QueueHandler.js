@@ -19,17 +19,6 @@ class QueueHandler extends events_1.EventEmitter {
         this.queue = [];
     }
     /**
-     * Emits a notice
-     *
-     * @param method The calling method's name.
-     * @param message A string message.
-     * @param params Arguments of the calling method.
-     */
-    notice(method, message, params) {
-        const notice = { method, message, params };
-        this.emit("notice", notice);
-    }
-    /**
      * Checks if an item already is in the queue, processed or not.
      *
      * @param item An item of any type to look for within Queue.
@@ -45,47 +34,59 @@ class QueueHandler extends events_1.EventEmitter {
      */
     update(item, modified) {
         const i = this.queue.indexOf(item);
-        this.queue[i] = Object.assign({}, item, modified);
-        this.notice("update", "Updated state of queued item", arguments);
-    }
-    /**
-     * Constructs a proper Queue item
-     *
-     * @param item An item of any type to queue
-     */
-    QItem(item) {
-        if (this.hasItem(item)) {
-            this.emit("notice", "QItem", "Item already exists in queue", arguments);
-            return;
+        const queueItem = this.queue[i];
+        if (queueItem === Object.assign({}, queueItem, modified)) {
+            return false;
         }
-        this.queue.push({
-            item: item,
-            enqueued: +new Date(),
-            status: "waiting",
-        });
-        this.notice("QItem", "Item was added to queue", arguments);
+        this.queue[i] = Object.assign({}, item, modified);
+        return true;
     }
     /**
      *
      * @param item An item of any type to queue.
      */
     enqueue(item) {
-        this.notice("enqueue", "Attempting to add item to queue", arguments);
-        this.QItem(item);
+        if (this.hasItem(item)) {
+            return false;
+        }
+        this.queue.push({
+            item: item,
+            enqueued: +new Date(),
+            status: "waiting",
+        });
+        return true;
     }
     /**
      * @return An item from the queue.
      */
     shiftQueue() {
-        this.notice("shiftQueue", "shiftQueue called", arguments);
         const matches = where(this.queue, { status: "waiting" }, 1);
         if (!matches.length) {
-            this.notice("shiftQueue", "No unhandled items in queue", arguments);
             return null;
         }
         const match = matches.pop();
         this.update(match, { status: "running" });
         return match.item;
+    }
+    markComplete(item) {
+        const matches = where(this.queue, { item: item }, 1);
+        if (!matches.length)
+            return false;
+        const match = matches.pop();
+        const res = this.update(match, { status: "done" });
+        if (!this.Running.length && !this.Waiting.length) {
+            this.emit("done");
+        }
+        return res;
+    }
+    get Completed() {
+        return where(this.queue, { status: "done" });
+    }
+    get Running() {
+        return where(this.queue, { status: "running" });
+    }
+    get Waiting() {
+        return where(this.queue, { status: "waiting" });
     }
 }
 exports.QueueHandler = QueueHandler;

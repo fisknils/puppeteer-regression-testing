@@ -1,20 +1,17 @@
 {
-    "compilerOptions": {
-        "module": "commonjs",
-        "target": "ES2020",
-        "noImplicitAny": true,
-        "allowJs": true,
-        "allowSyntheticDefaultImports": true,
-        "moduleResolution": "node",
-        "sourceMap": false,
-        "outDir": "dist",
-        "declaration": true,
-        "declarationDir": "types"
-    },
-    "include": ["src/**/*"],
-    "exclude": [
-        "node_modules",
-        "src/**/*.spec.ts",
-        "src/**/*.d.ts"
-    ],
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2020",
+    "noImplicitAny": true,
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
+    "sourceMap": false,
+    "outDir": "dist",
+    "declaration": true,
+    "declarationMap": true,
+    "strict": false
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "src/**/*.spec.ts", "src/**/*.d.ts"]
 }

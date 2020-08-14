@@ -13,26 +13,14 @@ const where = (array: Array<any>, where: PartialQueued, limit: number = 0) => {
 };
 
 export class QueueHandler extends EventEmitter {
-  private queue: Queue = [];
-
-  /**
-   * Emits a notice
-   *
-   * @param method The calling method's name.
-   * @param message A string message.
-   * @param params Arguments of the calling method.
-   */
-  private notice(method: string, message: string, params: IArguments): void {
-    const notice: QueueHandlerNotice = { method, message, params };
-    this.emit("notice", notice);
-  }
+  protected queue: Queue = [];
 
   /**
    * Checks if an item already is in the queue, processed or not.
    *
    * @param item An item of any type to look for within Queue.
    */
-  private hasItem(item: any): boolean {
+  protected hasItem(item: any): boolean {
     return !!where(this.queue, { item }).length;
   }
 
@@ -42,21 +30,23 @@ export class QueueHandler extends EventEmitter {
    * @param item A queued item
    * @param modified The properties to update
    */
-  private update(item: Queued, modified: PartialQueued): void {
+  protected update(item: Queued, modified: PartialQueued): boolean {
     const i = this.queue.indexOf(item);
+    const queueItem = this.queue[i];
+    if (queueItem === Object.assign({}, queueItem, modified)) {
+      return false;
+    }
     this.queue[i] = Object.assign({}, item, modified);
-    this.notice("update", "Updated state of queued item", arguments);
+    return true;
   }
 
   /**
-   * Constructs a proper Queue item
    *
-   * @param item An item of any type to queue
+   * @param item An item of any type to queue.
    */
-  private QItem(item: any): Queued {
+  enqueue(item: any): boolean {
     if (this.hasItem(item)) {
-      this.emit("notice", "QItem", "Item already exists in queue", arguments);
-      return;
+      return false;
     }
 
     this.queue.push({
@@ -64,27 +54,15 @@ export class QueueHandler extends EventEmitter {
       enqueued: +new Date(),
       status: "waiting",
     });
-
-    this.notice("QItem", "Item was added to queue", arguments);
-  }
-
-  /**
-   *
-   * @param item An item of any type to queue.
-   */
-  enqueue(item: any): void {
-    this.notice("enqueue", "Attempting to add item to queue", arguments);
-    this.QItem(item);
+    return true;
   }
 
   /**
    * @return An item from the queue.
    */
   shiftQueue(): any {
-    this.notice("shiftQueue", "shiftQueue called", arguments);
     const matches = where(this.queue, { status: "waiting" }, 1);
     if (!matches.length) {
-      this.notice("shiftQueue", "No unhandled items in queue", arguments);
       return null;
     }
 
@@ -92,24 +70,46 @@ export class QueueHandler extends EventEmitter {
     this.update(match, { status: "running" });
     return match.item;
   }
+
+  markComplete(item: any): boolean {
+    const matches = where(this.queue, { item: item }, 1);
+    if (!matches.length) return false;
+
+    const match = matches.pop();
+    const res = this.update(match, { status: "done" });
+
+    if (!this.Running.length && !this.Waiting.length) {
+      this.emit("done");
+    }
+
+    return res;
+  }
+
+  get Completed(): Queued[] {
+    return where(this.queue, { status: "done" });
+  }
+
+  get Running(): Queued[] {
+    return where(this.queue, { status: "running" });
+  }
+
+  get Waiting(): Queued[] {
+    return where(this.queue, { status: "waiting" });
+  }
 }
 
 export type Queue = Queued[];
 
+type QueueStatus = "waiting" | "running" | "done";
+
 export type Queued = {
   item: any;
   enqueued: number;
-  status: "waiting" | "running" | "done" | "error";
+  status: QueueStatus;
 };
 
 export type PartialQueued = {
   item?: any;
   enqueued?: number;
-  status?: "waiting" | "running" | "done" | "error";
-};
-
-export type QueueHandlerNotice = {
-  method: string;
-  message: string;
-  params: IArguments;
+  status?: QueueStatus;
 };

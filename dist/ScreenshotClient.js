@@ -25,7 +25,7 @@ class ScreenshotClient extends events_1.EventEmitter {
         this.init();
     }
     async init() {
-        this.logger.status("init", []);
+        this.logger.log("status", "init", []);
         try {
             this.browser = await puppeteer.launch();
             this.tabOne = await this.browser.newPage();
@@ -33,7 +33,7 @@ class ScreenshotClient extends events_1.EventEmitter {
             this.isClosed = false;
         }
         catch (e) {
-            this.logger.error("init", e);
+            this.logger.log("error", "init", e);
         }
         finally {
             this.emit("did-init");
@@ -41,7 +41,7 @@ class ScreenshotClient extends events_1.EventEmitter {
         }
     }
     async addJob(job) {
-        this.logger.status("addJob", { job });
+        this.logger.log("status", "addJob", { job });
         this.queue.enqueue(job);
     }
     async getWork() {
@@ -50,16 +50,16 @@ class ScreenshotClient extends events_1.EventEmitter {
         }
         const job = this.queue.shiftQueue();
         if (job) {
-            this.logger.status("getWork", []);
+            this.logger.log("status", "getWork", []);
             await this.startJob(job);
             return;
         }
-        this.logger.status("idle", []);
+        this.logger.log("status", "idle", []);
     }
     async startJob(job) {
         await this.reset();
         this.emit("start-job");
-        this.logger.status("startJob", { job });
+        this.logger.log("status", "startJob", { job });
         await this.compareURLs(job)
             .then(() => this.emit("did-job", { job }))
             .catch((e) => this.emit("error", { method: "startJob", data: e }));
@@ -86,17 +86,17 @@ class ScreenshotClient extends events_1.EventEmitter {
         return await Promise.all([callback(this.tabOne), callback(this.tabTwo)]);
     }
     async visit(URLs) {
-        this.logger.status("visit", { URLs });
+        this.logger.log("status", "visit", { URLs });
         let urls = [].concat(URLs);
         const res = this.dualPage((page) => page.goto(urls.shift(), { waitUntil: "networkidle0", timeout: 0 }));
         return res;
     }
     async setWidth(width) {
-        this.logger.status("setWidth", width);
+        this.logger.log("status", "setWidth", { width });
         await this.dualPage((page) => page.setViewport({ width: width, height: 100 }));
     }
     async screenshot() {
-        this.logger.status("screenshot", []);
+        this.logger.log("status", "screenshot");
         const [one, two] = [
             await this.tabOne.screenshot({
                 encoding: "base64",
@@ -116,12 +116,12 @@ class ScreenshotClient extends events_1.EventEmitter {
             URL: null,
             Width: null,
         };
-        this.logger.status("compareURLs", { job });
+        this.logger.log("status", "compareURLs", { job });
         await this.reset();
         await this.visit(URLs);
         await this.getDomCount("body");
         if (InjectJS.enabled) {
-            this.logger.status("Inject JS", { InjectJS });
+            this.logger.log("status", "Inject JS", { InjectJS });
             await this.dualPage((page) => page.evaluate((InjectJS) => eval(InjectJS.script), InjectJS));
         }
         for (let vi in Viewports) {
@@ -145,7 +145,7 @@ class ScreenshotClient extends events_1.EventEmitter {
             diff.Base64 = diff.Base64.replace(/^data:image\/png;base64,/, "");
             this.emit("result", diff);
         }
-        this.logger.status("comparedURL", {
+        this.logger.log("status", "comparedURL", {
             URLs,
             Viewports,
             InjectJS,
@@ -153,7 +153,7 @@ class ScreenshotClient extends events_1.EventEmitter {
         this.emit("done");
     }
     async getScreenshotDiff(Screenshots) {
-        this.logger.status("getScreenshotDiff", []);
+        this.logger.log("status", "getScreenshotDiff", []);
         const [one, two] = Screenshots;
         const res = await compare(Buffer.from(one.Base64, "base64"), Buffer.from(two.Base64, "base64"));
         const { isSameDimensions, misMatchPercentage } = res;
@@ -173,7 +173,7 @@ class ScreenshotClient extends events_1.EventEmitter {
         return ScreenshotDiff;
     }
     async getDomCount(selector = "*") {
-        this.logger.status("getDomCount", []);
+        this.logger.log("status", "getDomCount", []);
         const [one, two] = await this.dualPage((page) => page.$$(selector));
         return [one.length, two.length];
     }
