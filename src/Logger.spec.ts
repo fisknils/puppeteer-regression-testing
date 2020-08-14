@@ -29,26 +29,28 @@ async function emitTest(type: LogType, extra_args = {}) {
   ).resolves.toEqual(_args);
 }
 
-it("emits info messages", () => emitTest("info"));
-it("emits status messages", () => emitTest("status"));
-it("emits notice messages", () => emitTest("notice"));
-it("emits warning messages", () => emitTest("warning"));
-it("emits error messages", () => emitTest("error"));
+describe("Logger", () => {
+  it("emits info messages", () => emitTest("info"));
+  it("emits status messages", () => emitTest("status"));
+  it("emits notice messages", () => emitTest("notice"));
+  it("emits warning messages", () => emitTest("warning"));
+  it("emits error messages", () => emitTest("error"));
 
-it("removes circular references from stringifiedData", async () => {
-  expect.assertions(1);
-  const log = new Logger();
-  const testData = { circular: null };
-  testData.circular = testData;
+  it("removes circular references from stringifiedData", async () => {
+    expect.assertions(1);
+    const log = new Logger();
+    const testData = { circular: null };
+    testData.circular = testData;
 
-  const expected = '{"circular":{"circular":"[Circular ~.circular]"}}';
+    const expected = '{"circular":{"circular":"[Circular ~.circular]"}}';
 
-  const res: Promise<string> = new Promise((resolve, reject) => {
-    setTimeout(reject, 1000);
-    log.on("info", resolve);
-  }).then((message: LogMessage) => message.stringifiedData);
+    const res: Promise<string> = new Promise((resolve, reject) => {
+      setTimeout(reject, 1000);
+      log.on("info", resolve);
+    }).then((message: LogMessage) => message.stringifiedData);
 
-  log.log("info", "circular", testData);
+    log.log("info", "circular", testData);
 
-  expect(res).resolves.toEqual(expected);
+    expect(res).resolves.toEqual(expected);
+  });
 });
