@@ -63,4 +63,5 @@ export declare type Job = {
     Viewports: number[];
     InjectJS: InjectJS;
 };
+export default ScreenshotClient;
 //# sourceMappingURL=ScreenshotClient.d.ts.map

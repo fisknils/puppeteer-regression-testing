@@ -179,3 +179,4 @@ class ScreenshotClient extends events_1.EventEmitter {
     }
 }
 exports.ScreenshotClient = ScreenshotClient;
+exports.default = ScreenshotClient;

@@ -262,3 +262,5 @@ export type Job = {
   Viewports: number[];
   InjectJS: InjectJS;
 };
+
+export default ScreenshotClient;

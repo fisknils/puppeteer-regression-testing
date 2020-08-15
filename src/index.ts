@@ -1,3 +1,3 @@
-export * as Logger from "./Logger";
-export * as ScreenshotClient from "./ScreenshotClient";
-export * as QueueHandler from "./QueueHandler";
+export * from "./Logger";
+export * from "./ScreenshotClient";
+export * from "./QueueHandler";
