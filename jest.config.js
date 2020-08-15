@@ -4,5 +4,5 @@ module.exports = {
   globals: {
     compiler: "typescript"
   },
-
+  timeout: 10000
 };

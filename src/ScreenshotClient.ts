@@ -1,4 +1,4 @@
-import { Browser, Page } from "puppeteer";
+import * as Puppeteer from "puppeteer";
 import { EventEmitter } from "events";
 import { promisify } from "util";
 import { ResembleComparisonResult } from "resemblejs";
@@ -10,11 +10,11 @@ const compare = promisify(require("resemblejs").compare);
 const puppeteer = require("puppeteer");
 
 export class ScreenshotClient extends EventEmitter {
-  protected logger: Logger = new Logger();
+  public logger: Logger = new Logger();
   protected queue: QueueHandler = new QueueHandler();
-  protected browser: Browser;
-  protected tabOne: Page;
-  protected tabTwo: Page;
+  protected browser?: Puppeteer.Browser;
+  protected tabOne?: Puppeteer.Page;
+  protected tabTwo?: Puppeteer.Page;
   protected quitTimeout: any;
   protected isReady: boolean = true;
   protected isBusy: boolean = false;
@@ -29,28 +29,35 @@ export class ScreenshotClient extends EventEmitter {
     this.on("add-job", this.addJob);
     this.on("start-job", () => (this.isBusy = true));
     this.on("did-job", () => (this.isBusy = false));
-    this.init();
   }
 
-  protected async init() {
+  public async init() : Promise<boolean> {
     this.logger.log("status", "init", []);
 
     try {
       this.browser = await puppeteer.launch();
+      if (!this.browser) {
+        throw new Error("Browser launch failed");
+      }
       this.tabOne = await this.browser.newPage();
       this.tabTwo = await this.browser.newPage();
       this.isClosed = false;
+      this.emit('did-init');
+      this.ready();
+      return true;
     } catch (e) {
       this.logger.log("error", "init", e);
-    } finally {
-      this.emit("did-init");
-      this.ready();
+      return false;
     }
   }
 
-  async addJob(job: Job) {
+  public async addJob(job: Job) {
     this.logger.log("status", "addJob", { job });
     this.queue.enqueue(job);
+  }
+
+  public async onResult(callback: Function) {
+    this.on('result', result => callback(result));
   }
 
   protected async getWork() {
@@ -100,7 +107,11 @@ export class ScreenshotClient extends EventEmitter {
     await this.init();
   }
 
-  protected async dualPage(callback: (page: Page) => Promise<any>) {
+  protected async dualPage(callback: (page: Puppeteer.Page) => Promise<any>) {
+    if (!this.tabOne || !this.tabTwo) {
+      return;
+    }
+
     return await Promise.all([callback(this.tabOne), callback(this.tabTwo)]);
   }
 
@@ -108,8 +119,9 @@ export class ScreenshotClient extends EventEmitter {
     this.logger.log("status", "visit", { URLs });
 
     let urls = [].concat(URLs);
+
     const res = this.dualPage((page) =>
-      page.goto(urls.shift(), { waitUntil: "networkidle0", timeout: 0 })
+      page.goto(urls.shift().toString(), { waitUntil: "networkidle0", timeout: 0 })
     );
 
     return res;
@@ -262,5 +274,3 @@ export type Job = {
   Viewports: number[];
   InjectJS: InjectJS;
 };
-
-export default ScreenshotClient;

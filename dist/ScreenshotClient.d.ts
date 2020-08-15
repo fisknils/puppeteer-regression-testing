@@ -1,29 +1,30 @@
 /// <reference types="node" />
-import { Browser, Page } from "puppeteer";
+import * as Puppeteer from "puppeteer";
 import { EventEmitter } from "events";
 import { Logger } from "./Logger";
 import { QueueHandler } from "./QueueHandler";
 export declare class ScreenshotClient extends EventEmitter {
-    protected logger: Logger;
+    logger: Logger;
     protected queue: QueueHandler;
-    protected browser: Browser;
-    protected tabOne: Page;
-    protected tabTwo: Page;
+    protected browser?: Puppeteer.Browser;
+    protected tabOne?: Puppeteer.Page;
+    protected tabTwo?: Puppeteer.Page;
     protected quitTimeout: any;
     protected isReady: boolean;
     protected isBusy: boolean;
     protected isClosed: boolean;
     protected _tick: number;
     constructor();
-    protected init(): Promise<void>;
+    init(): Promise<boolean>;
     addJob(job: Job): Promise<void>;
+    onResult(callback: Function): Promise<void>;
     protected getWork(): Promise<void>;
     protected startJob(job: Job): Promise<void>;
     protected tick(): Promise<void>;
     protected ready(): Promise<void>;
     protected close(): Promise<void>;
     protected reset(): Promise<void>;
-    protected dualPage(callback: (page: Page) => Promise<any>): Promise<[any, any]>;
+    protected dualPage(callback: (page: Puppeteer.Page) => Promise<any>): Promise<[any, any]>;
     protected visit(URLs: URL[]): Promise<[any, any]>;
     protected setWidth(width: number): Promise<void>;
     protected screenshot(): Promise<{
@@ -63,5 +64,4 @@ export declare type Job = {
     Viewports: number[];
     InjectJS: InjectJS;
 };
-export default ScreenshotClient;
 //# sourceMappingURL=ScreenshotClient.d.ts.map

@@ -22,27 +22,32 @@ class ScreenshotClient extends events_1.EventEmitter {
         this.on("add-job", this.addJob);
         this.on("start-job", () => (this.isBusy = true));
         this.on("did-job", () => (this.isBusy = false));
-        this.init();
     }
     async init() {
         this.logger.log("status", "init", []);
         try {
             this.browser = await puppeteer.launch();
+            if (!this.browser) {
+                throw new Error("Browser launch failed");
+            }
             this.tabOne = await this.browser.newPage();
             this.tabTwo = await this.browser.newPage();
             this.isClosed = false;
+            this.emit('did-init');
+            this.ready();
+            return true;
         }
         catch (e) {
             this.logger.log("error", "init", e);
-        }
-        finally {
-            this.emit("did-init");
-            this.ready();
+            return false;
         }
     }
     async addJob(job) {
         this.logger.log("status", "addJob", { job });
         this.queue.enqueue(job);
+    }
+    async onResult(callback) {
+        this.on('result', result => callback(result));
     }
     async getWork() {
         if (this.isBusy || !this.isReady) {
@@ -83,12 +88,15 @@ class ScreenshotClient extends events_1.EventEmitter {
         await this.init();
     }
     async dualPage(callback) {
+        if (!this.tabOne || !this.tabTwo) {
+            return;
+        }
         return await Promise.all([callback(this.tabOne), callback(this.tabTwo)]);
     }
     async visit(URLs) {
         this.logger.log("status", "visit", { URLs });
         let urls = [].concat(URLs);
-        const res = this.dualPage((page) => page.goto(urls.shift(), { waitUntil: "networkidle0", timeout: 0 }));
+        const res = this.dualPage((page) => page.goto(urls.shift().toString(), { waitUntil: "networkidle0", timeout: 0 }));
         return res;
     }
     async setWidth(width) {
@@ -179,4 +187,3 @@ class ScreenshotClient extends events_1.EventEmitter {
     }
 }
 exports.ScreenshotClient = ScreenshotClient;
-exports.default = ScreenshotClient;
