@@ -5,7 +5,6 @@ const events_1 = require("events");
 const util_1 = require("util");
 const Logger_1 = require("./Logger");
 const QueueHandler_1 = require("./QueueHandler");
-const stringify = require("json-stringify-safe");
 const compare = util_1.promisify(require("resemblejs").compare);
 const puppeteer = require("puppeteer");
 class ScreenshotClient extends events_1.EventEmitter {

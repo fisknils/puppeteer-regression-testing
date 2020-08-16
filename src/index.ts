@@ -1,5 +1,3 @@
-import { Logger } from "./Logger";
-import { ScreenshotClient } from "./ScreenshotClient";
-import { QueueHandler } from "./QueueHandler";
-
-export { Logger, ScreenshotClient, QueueHandler };
+export * as Logger from "./Logger";
+export * as ScreenshotClient from "./ScreenshotClient";
+export * as QueueHandler from "./QueueHandler";

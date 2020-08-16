@@ -1,68 +1,70 @@
-import { ScreenshotClient, ScreenshotDiff } from "./ScreenshotClient";
-import "fs";
-import "http";
-import "path";
+import { ScreenshotClient } from "./ScreenshotClient";
+import { readFile } from "fs/promises";
+import { resolve } from "path";
 
-const fs = require("fs");
-const http = require("http");
-const path = require("path");
+process.on( 'unhandledRejection', console.error );
+process.on( 'uncaughtException', console.error );
 
 const testItem = {
   URLs: [
-    new URL("file:///" + path.resolve(__dirname, "../tests", "source.html")),
-    new URL("file:///" + path.resolve(__dirname, "../tests", "target.html")),
+    new URL( "file:///" + resolve( __dirname, "../tests", "source.html" ) ),
+    new URL( "file:///" + resolve( __dirname, "../tests", "target.html" ) ),
   ],
-  Viewports: [320],
+  Viewports: [ 320 ],
   InjectJS: {
     enabled: false,
     script: "",
   },
 };
 
-const sleep = (ms) =>
-  new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
+let client = new ScreenshotClient();
 
-let client, server;
+afterAll( () =>
+{
+  client = null;
+} );
 
-beforeEach(() => {
-  client = new ScreenshotClient();
-});
+const sleep = ( ms ) =>
+  new Promise( ( resolve ) =>
+  {
+    setTimeout( resolve, ms );
+  } );
 
-beforeAll(() => {
-  jest.setTimeout(10000);
-});
+describe( "ScreenshotClient", () =>
+{
+  it( "Constructs", async () =>
+  {
+    expect.assertions( 1 );
+    expect( client ).toBeInstanceOf( ScreenshotClient );
+  } );
 
-describe("ScreenshotClient", () => {
-  it("Constructs", async () => {
-    expect.assertions(1);
-    expect(client).toBeInstanceOf(ScreenshotClient);
-  });
+  it( "Compares", async () =>
+  {
+    expect.assertions( 1 );
 
-  it("Inits", async () => {
-    expect(client.init()).resolves.toBeTruthy();
-  });
+    const diff: Promise<boolean> = new Promise( resolve => client.onResult( resolve ) )
+      .then( ( got: any ) =>
+      {
+        return readFile( resolve( __dirname, '../tests/expectedResult.json' ), { encoding: 'utf-8' } )
+          .then( raw => JSON.parse( raw ) )
+          .then( expected =>
+          {
+            for ( let p in expected )
+            {
+              if ( got[ p ] !== expected[ p ] )
+              {
+                const { Screenshots } = got;
+                console.error( 'mismatch', { p, got, Screenshots, expected } );
+                return false;
+              }
+            }
+            return true;
+          } )
+          .catch( ( e ) => { console.error( e ); return false; } );
+      } )
+      .catch( ( e ) => { console.error( e ); return false; } );
 
-  it("Compares", async () => {
-    expect.assertions(2);
-
-    const results = [];
-
-    await client.init();
-
-    const diff: Promise<void> = new Promise((resolve) => {
-      client.onResult((res) => {
-        resolve(res);
-      });
-    })
-      .then(({ misMatchPercentage }) => {
-        expect(misMatchPercentage).toEqual("0.17");
-      })
-      .catch(console.error);
-
-    client.addJob(testItem);
-
-    await diff;
-  });
-});
+    client.addJob( testItem );
+    await expect( diff ).resolves.toEqual( true );
+  } );
+} );

@@ -1,0 +1,20 @@
+{
+    "tests": [
+			{
+        "test": {
+            "URLs": ["../tests/source.html", "../tests/target.html"],
+            "Viewports": [320],
+            "InjectJS": {
+                "enabled": false,
+                "script": ""
+            }
+        },
+        "expect": {
+            "Width": 320,
+            "isSameDimensions": true,
+            "misMatchPercentage": "0.17",
+            "DOMCountDiff": 0
+        }
+		}
+	]
+}

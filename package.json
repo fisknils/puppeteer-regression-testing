@@ -4,7 +4,8 @@
     "description": "",
     "main": "dist/index.js",
     "scripts": {
-        "test": "jest",
+        "test": "jest --runInBand --detectOpenHandles",
+        "dist": "npm run prod",
         "prod": "npm run test && npm run production",
         "dev": "npm run test && npm run development",
         "production": "tsc --project tsconfig.production.json",
@@ -16,7 +17,7 @@
     "dependencies": {
         "image-to-base64": "^2.1.1",
         "json-stringify-safe": "^5.0.1",
-        "puppeteer": "^5.0.0",
+        "puppeteer": "^5.2.1",
         "resemblejs": "^3.2.5"
     },
     "devDependencies": {
